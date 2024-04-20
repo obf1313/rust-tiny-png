@@ -7,3 +7,8 @@ edition = "2021"
 
 [dependencies]
 image="0.25.1"
+wasm-bindgen="0.2.92"
+
+[lib]
+# cdylib 是 Rust 项目中一种编译目标类型，表示编译为动态链接库（Dynamic Library）的格式。在 Rust 中，动态链接库是一种包含 Rust 代码的可执行文件，但它不包含 main 函数，因此不能被直接执行。相反，它被设计为供其他程序链接和调用。
+crate-type = ["cdylib", "rlib"]

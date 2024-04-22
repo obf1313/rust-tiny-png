@@ -9,7 +9,7 @@ fn main() {
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer)
         .expect("Failed to read image file");
-    let out_buffer = tiny_png(&buffer, "image/png");
+    let out_buffer = tiny_png(&buffer);
     // 将字节缓冲区写入文件
     let mut file = File::create("output.png").expect("Failed to create output file");
     file.write_all(&out_buffer)

@@ -1,5 +1,6 @@
 // TODO: 这是啥意思
 extern crate image;
+extern crate oxipng;
 use image::imageops::FilterType;
 use std::fs::File;
 use std::io::prelude::*;
@@ -33,8 +34,18 @@ pub fn tiny_png(file_buffer: &[u8], file_type: &str) -> Vec<u8> {
             resize(FilterType::Triangle, image::ImageFormat::Jpeg);
         }
         "image/png" => {
-            // TODO: 没有效果
-            resize(FilterType::Triangle, image::ImageFormat::Png);
+            let options = oxipng::Options {
+                ..Default::default()
+            };
+            // 压缩要压 60+ seconds
+            let buffer = match oxipng::optimize_from_memory(file_buffer, &options) {
+                Ok(buffer) => buffer,
+                Err(e) => {
+                    eprintln!("Failed to compress image: {}", e);
+                    file_buffer.to_vec()
+                }
+            };
+            return buffer;
         }
         _ => {
             buffer = file_buffer.to_vec();

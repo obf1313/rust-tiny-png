@@ -1,6 +1,3 @@
-// TODO: 这是啥意思
-extern crate image;
-extern crate oxipng;
 use image::imageops::FilterType;
 use std::fs::File;
 use std::io::prelude::*;

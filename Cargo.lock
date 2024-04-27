@@ -732,6 +732,7 @@ name = "rust-tiny-png"
 version = "0.1.0"
 dependencies = [
  "image",
+ "miniz_oxide",
  "wasm-bindgen",
 ]
 

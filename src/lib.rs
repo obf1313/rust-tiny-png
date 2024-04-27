@@ -1,8 +1,7 @@
-// TODO: 这是啥意思
 extern crate image;
 use image::imageops::FilterType;
-use std::fs::File;
-use std::io::prelude::*;
+use miniz_oxide::deflate::compress_to_vec;
+use miniz_oxide::inflate::decompress_to_vec_with_limit;
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
 
@@ -31,11 +30,13 @@ pub fn tiny_png(file_buffer: &[u8], file_type: &str) -> Vec<u8> {
     match file_type {
         // 正常
         "image/jpeg" => resize(FilterType::Triangle, image::ImageFormat::Jpeg),
-        // FIXME: 变大了
-        "image/png" => img
-            .write_to(&mut Cursor::new(&mut buffer), image::ImageFormat::Png)
-            .expect("Failed to write image to buffer"),
-        // FIXME: 不动了
+        "image/png" => {
+            // Compress the input
+            let compressed = compress_to_vec(file_buffer, 9);
+            // Decompress the compressed input and limit max output size to avoid going out of memory on large/malformed input.
+            buffer = decompress_to_vec_with_limit(compressed.as_slice(), 1024 * 1024 * 1024)
+                .expect("Failed to decompress!");
+        }
         _ => buffer = file_buffer.to_vec(),
     };
     return buffer;
@@ -47,6 +48,8 @@ pub fn tiny_png(file_buffer: &[u8], file_type: &str) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs::File;
+    use std::io::prelude::*;
 
     fn resize(in_name: &str, out_name: &str, file_type: &str) {
         let mut file = File::open(in_name).expect("Failed to open image file");

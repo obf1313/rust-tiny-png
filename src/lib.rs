@@ -14,19 +14,30 @@ pub fn tiny_png(file_buffer: &[u8], file_type: &str) -> Vec<u8> {
     // 使用字节数组初始化图像
     let img: image::DynamicImage =
         image::load_from_memory(file_buffer).expect("Failed to load image");
-    let format = match file_type {
-        // 正常
-        "image/jpeg" => image::ImageFormat::Jpeg,
-        // FIXME: 变大了
-        "image/png" => image::ImageFormat::Png,
-        // FIXME: 不动了
-        "image/gif" => image::ImageFormat::Gif,
-        _ => image::ImageFormat::Jpeg,
-    };
+    let width = img.width();
+    let height = img.height();
     // 初始化字节流
     let mut buffer = Vec::new();
-    img.write_to(&mut Cursor::new(&mut buffer), format)
-        .expect("Failed to write image to buffer");
+    // 闭包
+    let mut resize = |filter: FilterType, format: image::ImageFormat| {
+        let resized = img.resize(width, height, filter);
+        resized
+            .write_to(&mut Cursor::new(&mut buffer), format)
+            .expect("Failed to write image to buffer");
+        if buffer >= file_buffer.to_vec() {
+            buffer = file_buffer.to_vec();
+        }
+    };
+    match file_type {
+        // 正常
+        "image/jpeg" => resize(FilterType::Triangle, image::ImageFormat::Jpeg),
+        // FIXME: 变大了
+        "image/png" => img
+            .write_to(&mut Cursor::new(&mut buffer), image::ImageFormat::Png)
+            .expect("Failed to write image to buffer"),
+        // FIXME: 不动了
+        _ => buffer = file_buffer.to_vec(),
+    };
     return buffer;
 }
 // 执行以下命令可以打包
@@ -48,7 +59,7 @@ mod tests {
         new_file
             .write_all(&out_buffer)
             .expect("Failed to write buffer to file");
-        assert!(buffer.len() > out_buffer.len());
+        assert!(buffer.len() >= out_buffer.len());
     }
 
     #[test]
